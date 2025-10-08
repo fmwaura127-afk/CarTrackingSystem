@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Manage Authorized Devices</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        form { margin-top: 20px; }
+        input[type="text"] { padding: 8px; width: 300px; }
+        input[type="submit"] { padding: 8px 16px; }
+        .message { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Manage Authorized Devices</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="{{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>MAC Address</th>
+                <th>Token</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for device in devices %}
+            <tr>
+                <td>{{ device.id }}</td>
+                <td>{{ device.mac_address }}</td>
+                <td>{{ device.token }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <h2>Add New Device</h2>
+    <form method="post">
+        <label for="mac_address">MAC Address:</label>
+        <input type="text" id="mac_address" name="mac_address" required pattern="^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$" title="Enter a valid MAC address (e.g. 4C:66:A6:84:59:79)" />
+        <input type="submit" value="Add Device" />
+    </form>
+    <br />
+    <a href="{{ url_for('dashboard') }}" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #006600; color: white; text-decoration: none; border-radius: 5px;">Back to Dashboard</a>
+</body>
+</html>

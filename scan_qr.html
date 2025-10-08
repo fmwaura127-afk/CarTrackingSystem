@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Scan QR - Vehicle Entry/Exit</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #003366;
+        }
+        button {
+            margin: 10px;
+            padding: 12px 24px;
+            font-size: 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+            background-color: #0055a5;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #003366;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        a.back-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #0055a5;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        a.back-link:hover {
+            background-color: #003366;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Vehicle Plate: {{ plate }}</h1>
+        <button id="entry-btn">Mark Entry</button>
+        <button id="exit-btn">Mark Exit</button>
+        <div id="result"></div>
+        <a href="{{ url_for('dashboard') }}" class="back-link">Back to Dashboard</a>
+    </div>
+    <script>
+        const plate = "{{ plate }}";
+        const token = "{{ token }}";
+        const resultDiv = document.getElementById('result');
+
+        async function trackMovement(action) {
+            const url = `/track/${plate}/${action}?token=${token}`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                if (response.ok) {
+                    resultDiv.textContent = `Success: Vehicle ${data.plate} marked for ${data.action}.`;
+                    resultDiv.style.color = 'green';
+                } else {
+                    resultDiv.textContent = `Error: ${data.error || data.message}`;
+                    resultDiv.style.color = 'red';
+                }
+            } catch (error) {
+                resultDiv.textContent = 'Error: Could not connect to server.';
+                resultDiv.style.color = 'red';
+            }
+        }
+
+        document.getElementById('entry-btn').addEventListener('click', () => trackMovement('entry'));
+        document.getElementById('exit-btn').addEventListener('click', () => trackMovement('exit'));
+    </script>
+</body>
+</html>

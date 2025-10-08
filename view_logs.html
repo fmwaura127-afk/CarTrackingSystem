@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Vehicle Entry/Exit Logs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #006600;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #006600;
+            color: white;
+        }
+        a {
+            color: #006600;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .sticky-links {
+            position: sticky;
+            top: 0;
+            background-color: white;
+            padding: 10px 0;
+            z-index: 1000;
+            border-bottom: 1px solid #ccc;
+            text-align: center;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+        .sticky-links a {
+            margin: 0 15px;
+            font-weight: bold;
+        }
+        button {
+            padding: 6px 12px;
+            background-color: #FFD700;
+            color: black;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #e6c200;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Vehicle Entry/Exit Logs</h1>
+        <div class="sticky-links">
+            <a href="/dashboard">Back to Dashboard</a>
+            <a href="/view-vehicles">View Registered Vehicles</a>
+            <a href="/logout">Logout</a>
+            <button id="print-logs-btn">Print Logs</button>
+            <button id="export-pdf-btn">Export as PDF</button>
+        </div>
+        <table id="logs-table">
+            <thead>
+                <tr>
+                    <th>Car Plate</th>
+                    <th>Entry Timestamp</th>
+                    <th>Exit Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set grouped_logs = {} %}
+                {% for log in logs %}
+                    {% if log.plate not in grouped_logs %}
+                        {% set _ = grouped_logs.update({log.plate: {'entry': None, 'exit': None}}) %}
+                    {% endif %}
+                    {% if log.action == 'entry' %}
+                        {% set _ = grouped_logs[log.plate].update({'entry': log.timestamp.strftime('%Y-%m-%d %H:%M:%S')}) %}
+                    {% elif log.action == 'exit' %}
+                        {% set _ = grouped_logs[log.plate].update({'exit': log.timestamp.strftime('%Y-%m-%d %H:%M:%S')}) %}
+                    {% endif %}
+                {% endfor %}
+                {% for plate, actions in grouped_logs.items() %}
+                <tr>
+                    <td>{{ plate }}</td>
+                    <td>{{ actions.entry or '' }}</td>
+                    <td>{{ actions.exit or '' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <!-- Clear Logs Button and Modal -->
+    <div style="text-align:center; margin-top:30px;">
+        <button id="clear-logs-btn" style="background-color:#d9534f;color:white;">Clear Logs</button>
+    </div>
+    <div id="clearLogsModal" style="display:none;position:fixed;z-index:2000;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);justify-content:center;align-items:center;">
+        <div style="background:white;padding:30px 20px;border-radius:8px;max-width:350px;width:90%;box-shadow:0 0 10px #0003;text-align:center;">
+            <h3>Admin Password Required</h3>
+            <input type="password" id="admin-password" placeholder="Enter admin password" style="width:90%;padding:8px;margin:10px 0;" />
+            <div id="clear-logs-error" style="color:red;font-size:0.95em;"></div>
+            <button id="submit-clear-logs" style="background-color:#d9534f;color:white;">Confirm</button>
+            <button id="cancel-clear-logs" style="margin-left:10px;">Cancel</button>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        document.getElementById('print-logs-btn').addEventListener('click', function() {
+            window.print();
+        });
+
+        document.getElementById('export-pdf-btn').addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.autoTable({ html: '#logs-table' });
+            doc.save('vehicle_logs.pdf');
+        });
+
+        // Clear Logs Modal Logic
+        const clearLogsBtn = document.getElementById('clear-logs-btn');
+        const clearLogsModal = document.getElementById('clearLogsModal');
+        const cancelClearLogs = document.getElementById('cancel-clear-logs');
+        const submitClearLogs = document.getElementById('submit-clear-logs');
+        const adminPasswordInput = document.getElementById('admin-password');
+        const clearLogsError = document.getElementById('clear-logs-error');
+
+        clearLogsBtn.onclick = function() {
+            clearLogsModal.style.display = 'flex';
+            adminPasswordInput.value = '';
+            clearLogsError.textContent = '';
+        };
+        cancelClearLogs.onclick = function() {
+            clearLogsModal.style.display = 'none';
+        };
+        submitClearLogs.onclick = function() {
+            const password = adminPasswordInput.value;
+            clearLogsError.textContent = '';
+            fetch('/clear_logs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    clearLogsModal.style.display = 'none';
+                    window.location.reload();
+                } else {
+                    clearLogsError.textContent = data.message || 'Incorrect password or error.';
+                }
+            })
+            .catch(() => {
+                clearLogsError.textContent = 'Server error.';
+            });
+        };
+        // Close modal on outside click
+        clearLogsModal.onclick = function(e) {
+            if (e.target === clearLogsModal) clearLogsModal.style.display = 'none';
+        };
+    </script>
+</body>
+</html>

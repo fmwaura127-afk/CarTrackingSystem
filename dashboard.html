@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Vehicle Registration Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        h1 {
+            text-align: center;
+            color: #006600;
+        }
+        form {
+            margin-top: 20px;
+        }
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="tel"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        button {
+            margin-top: 25px;
+            background-color: #006600;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #004d00;
+        }
+        .notification {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #d4edda;
+            color: #155724;
+            border-radius: 4px;
+            border: 1px solid #c3e6cb;
+        }
+        .links {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .links a {
+            margin: 0 15px;
+            color: #006600;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+        .flash-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+            z-index: 10000;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            font-size: 18px;
+            min-width: 300px;
+            text-align: center;
+        }
+        .flash-success {
+            background-color: #800000; 
+            color: #fff;
+            border: 2px solid #0056b3;
+        }
+        .flash-danger {
+            background-color: #dc3545;
+            color: white;
+            border: 2px solid #a71d2a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Vehicle Registration</h1>
+        {% if message %}
+        <div class="notification">{{ message }}</div>
+        {% endif %}
+        <form method="POST" action="/dashboard">
+            <label for="pj_number">PJ Number (required):</label>
+            <input type="text" id="pj_number" name="pj_number" required />
+
+            <label for="plate">Car Plate Number:</label>
+            <input type="text" id="plate" name="plate" />
+
+            <label for="driver_name">Driver's Name:</label>
+            <input type="text" id="driver_name" name="driver_name" />
+
+            <label for="phone_number">Phone Number:</label>
+            <input type="tel" id="phone_number" name="phone_number" />
+
+            <label for="id_number">ID Number:</label>
+            <input type="text" id="id_number" name="id_number" />
+
+            <button type="submit">Register Vehicle</button>
+        </form>
+        <div class="links" style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
+            <a href="/view-vehicles" style="color: #006600; font-weight: bold; text-decoration: none; font-size: 18px; padding: 8px 12px; border-radius: 6px; background-color: #e6f0ff; transition: background-color 0.3s ease;">View Registered Vehicles</a>
+            <a href="/view-logs" style="color: #006600; font-weight: bold; text-decoration: none; font-size: 18px; padding: 8px 12px; border-radius: 6px; background-color: #e6f0ff; transition: background-color 0.3s ease;">View Vehicle Entry/Exit Logs</a>
+            <a href="{{ url_for('manage_devices') }}" style="color:#006600; font-weight: bold; text-decoration: none; font-size: 18px; padding: 8px 12px; border-radius: 6px; background-color: #e6f0ff; transition: background-color 0.3s ease;">Manage Authorized Devices</a>
+            <a href="/logout" style="color: #006600; font-weight: bold; text-decoration: none; font-size: 18px; padding: 8px 12px; border-radius: 6px; background-color: #e6f0ff; transition: background-color 0.3s ease;">Logout</a>
+        </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}" id="flash-message">{{ message }}</div>
+            {% endfor %}
+            <script>
+            setTimeout(() => {
+                const flash = document.getElementById('flash-message');
+                if (flash) {
+                flash.style.opacity = '0';
+                setTimeout(() => flash.remove(), 500);
+                }
+            }, 3000);
+            </script>
+        {% endif %}
+        {% endwith %}
+    </div>
+</body>
+</html>
